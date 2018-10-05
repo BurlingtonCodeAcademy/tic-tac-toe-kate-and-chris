@@ -32,29 +32,30 @@
   </div>
   <script>
 
-class Square { 
-  constructor (id, row, column){
-    this.id = id;
-    this.row = row;
-    this.column = column;
+class Player { 
+  constructor (letter){
+    this.letter = letter;
+  }
+  switchPlayer(){
+    if(this.letter === "X"){
+      this.letter = "O";
+    } else {
+      this.letter = "X";
+    }
   }
 }
 
-
-let board;
-let isPlayerX = true;
-let count = 0;
-
-
+let currentPlayer;
+let continuePlay = true;
+setupCells();
 startNewGame();
 
 function startNewGame(){
   console.log("New Game, Player X starts")
-  isPlayerX = true;
+  currentPlayer = new Player ("X");
   count = 0;
-  board = clearBoard();
-  console.log(board)
-  setupCells();
+  continuePlay = true;
+  clearBoard();
 };
 
 function clearBoard(){
@@ -62,103 +63,91 @@ function clearBoard(){
   for (let cell of cells){
     cell.innerHTML = ""
   }
-  let square0 = new Square('cell-0', 1, 1)
-  let square1 = new Square('cell-1', 1, 2)
-  let square2 = new Square('cell-2', 1, 3)
-  let square3 = new Square('cell-3', 2, 1)
-  let square4 = new Square('cell-4', 2, 2)
-  let square5 = new Square('cell-5', 2, 3)
-  let square6 = new Square('cell-6', 3, 1)
-  let square7 = new Square('cell-7', 3, 2)
-  let square8 = new Square('cell-8', 3, 3)
-  let newBoard = [square0, square1, square2, square3, square4, square5, square6, square7, square8];
-  return newBoard;
-}
+  document.getElementById('title').innerHTML= "New Game of Tic Tac Toe!";
+};
 
 // determines which cell was clicked and calls addXO
 function setupCells(){
   let cells = document.getElementsByClassName("cell");
   for (let cell of cells){
     console.log({cell});
-    cell.onclick = function() { 
-      addXO(cell)
-    };
-  };
+    cell.onclick = function() { addXO(cell)};
+  }
 };
 
 // adds X or O to board depending on Player 1 or 2
 function addXO(cell){
-
-  for (let square of board){
-    if (square.id === cell.id){
-      if(isPlayerX){
-        square.letter = "X"
-        cell.innerHTML = "X"
-      } else {
-        square.letter = "O"
-        cell.innerHTML = "O"
-      }
-    }
-  }  
-  console.log(board)
-
-  if (checkWinOrTie(cell.innerHTML) === true){
-    startNewGame();
-  } else {
-    isPlayerX = !isPlayerX;
+  if(cell.innerHTML === "" && continuePlay === true){
+    cell.innerHTML = currentPlayer.letter;
+    if (checkWinOrTie(currentPlayer.letter) === false){
+      currentPlayer.switchPlayer();
+    } 
   }
-  return;
 };
 
 function fullBoard(){
-  for (let square of board){
-    if(square.letter === "X" || square.letter === "O"){
+  let cells = document.getElementsByClassName("cell");
+  for (let cell of cells){
+    if (cell.innerHTML === "X" || cell.innerHTML === "O"){
       count += 1;
-      console.log(count)
-      if(count === 9){
+    }
+    console.log(count)
+    if(count === 9){
         return true;
       } else {
         return false;
       }
-    }
   }
-}
+};
 
 function checkWinOrTie(player){
+  
   if(winCondition(player) === true){
     console.log("win")
     document.getElementById('title').innerHTML= "Player " + player + " Wins!!!";
+    continuePlay = false;
     return true;
   } 
   if (fullBoard()){
     console.log("tie game");
     document.getElementById('title').innerHTML= "Tie Game!";
+    continuePlay = false;
     return true;
   } 
   return false;
 }
 // needs to be refactored but works for every win condition!
 function winCondition(letter){
-  for (let rowIndex = 1; rowIndex < 4; rowIndex++){
-    let rowArray = board.filter(square => square.row === rowIndex && square.letter === letter);
-    if (rowArray.length === 3) {
-      return true;
-    } 
-  }
-
-  for (let columnIndex = 1; columnIndex < 4; columnIndex++){
-    let columnArray = board.filter(square => square.column === columnIndex && square.letter === letter);
-    if (columnArray.length === 3) {
+  // row win condition:
+  for (let number = 1; number < 4; number++){
+    let rows = document.getElementsByClassName("r" + number);
+    let rowArray = [];
+    for (let row of rows) {
+      rowArray.push(row.innerHTML);
+    }
+    if (rowArray.join("") === "XXX" || rowArray.join("") === "OOO"){
       return true;
     }
-  } 
-  let diagonalArray = board.filter(square => (square.id === 'cell-0' || square.id === 'cell-4' || square.id === 'cell-8') && (square.letter === letter));
-
-  let diagonalArray2 = board.filter(square => (square.id === 'cell-2' || square.id === 'cell-4' || square.id === 'cell-6') && (square.letter === letter));
-
-  if(diagonalArray.length === 3 || diagonalArray2.length === 3){
+  }
+  
+  // column win condition
+  for (let number = 1; number < 4; number++){
+    let columns = document.getElementsByClassName("c" + number);
+    let columnArray = [];
+    for (let column of columns) {
+      columnArray.push(column.innerHTML);
+    }
+    if (columnArray.join("") === "XXX" || columnArray.join("") === "OOO"){
+      return true;
+    }
+  }
+  
+  if (document.getElementById('cell-0').innerHTML === letter && document.getElementById('cell-4').innerHTML === letter && document.getElementById('cell-8').innerHTML === letter){
     return true;
   }
+  if (document.getElementById('cell-2').innerHTML === letter && document.getElementById('cell-4').innerHTML === letter && document.getElementById('cell-6').innerHTML === letter){
+    return true;
+  } 
   return false;
 };
 
