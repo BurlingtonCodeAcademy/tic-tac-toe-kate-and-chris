@@ -12,7 +12,13 @@
 
 <body>
   <h2 id='title'>Tic Tac Toe</h2>
+  <form>
+    <input id="computer" type="radio" name="game choice" value="computer" >Play Computer<br>
+    <input type="radio" name="game choice" value="human" checked>Play Other Human<br>
+  </form>
+  <br>
   <button id="button" onclick="startNewGame()">Start New Game</button>
+  <br><br><br>
   <div class="board" style="font-size: 130px">
     <div id="row-1">
       <div id="cell-0" class="cell r1 c1"></div>
@@ -43,10 +49,12 @@ class Player {
       this.letter = "X";
     }
   }
-}
+
+};
 
 let currentPlayer;
 let continuePlay = true;
+let humanGame = true;
 setupCells();
 startNewGame();
 
@@ -55,6 +63,11 @@ function startNewGame(){
   currentPlayer = new Player ("X");
   count = 0;
   continuePlay = true;
+  if(document.getElementById('computer').checked === true){
+    humanGame = false;
+  } else {
+    humanGame = true;
+  };
   clearBoard();
 };
 
@@ -70,7 +83,6 @@ function clearBoard(){
 function setupCells(){
   let cells = document.getElementsByClassName("cell");
   for (let cell of cells){
-    console.log({cell});
     cell.onclick = function() { addXO(cell)};
   }
 };
@@ -79,10 +91,96 @@ function setupCells(){
 function addXO(cell){
   if(cell.innerHTML === "" && continuePlay === true){
     cell.innerHTML = currentPlayer.letter;
+    // only want this if-loop to run if human game
     if (checkWinOrTie(currentPlayer.letter) === false){
       currentPlayer.switchPlayer();
-    } 
+      if (humanGame === false){
+        computerPlays();
+        if(checkWinOrTie(currentPlayer.letter) === false){
+          currentPlayer.switchPlayer();
+        }
+      }
+    }
   }
+};
+// automatically places 'O' on board
+function computerPlays(){
+  if (findEmptySquares().length > 0){
+    let square = pickBestSquare();
+    document.getElementById(square).innerHTML = currentPlayer.letter;
+  }
+};
+
+// returns array of all available spaces to play
+function findEmptySquares() {
+  let emptySquares = [];
+  let cells = document.getElementsByClassName("cell");
+  for (let cell of cells){
+    if(cell.innerHTML === ""){
+      emptySquares.push(cell.id)
+    }
+  }
+    return emptySquares;
+};
+
+// picks the best square to play (AI) -- currently the first open space...
+function pickBestSquare(){
+  let emptySquares = findEmptySquares();
+  let bestSquare;
+  // if XX in a row/column, and empty square - play empty square
+  if (blockOpponent("r")){
+    bestSquare = blockOpponent("r");
+  } else if (blockOpponent("c")){
+    bestSquare = blockOpponent("c");
+  } else if (emptySquares.includes('cell-4')){
+    bestSquare = emptySquares[emptySquares.indexOf('cell-4')];
+  } 
+  else {
+    bestSquare = emptySquares[0];
+  }
+  return bestSquare;
+};
+
+
+// blocks double Xs
+function blockOpponent(rOrC){
+  for (let number = 1; number < 4; number++){
+    let rows = document.getElementsByClassName(rOrC + number);
+    let rowArray = [];
+    let idArray = [];
+    for (let row of rows) {
+      rowArray.push(row.innerHTML);
+      idArray.push(row.id);
+    }
+    if (rowArray.includes("") && (rowArray.join("") === "OO" || rowArray.join("") === "XX")){
+      return idArray[rowArray.indexOf("")];
+    } 
+  };
+  let diagonalArray1 = [document.getElementById('cell-0'), document.getElementById('cell-4'), document.getElementById('cell-8')];
+  
+  let letterArray1 = [];
+  let idArray1 = [];
+
+  for (let cell of diagonalArray1){
+    letterArray1.push(cell.innerHTML);
+    idArray1.push(cell.id);
+  }
+  if (letterArray1.includes("") && (letterArray1.join("") === "XX" || letterArray1.join("") === "OO")){
+      return idArray1[letterArray1.indexOf("")];
+  } 
+
+  let letterArray2 = [];
+  let idArray2 = [];
+  let diagonalArray2 = [document.getElementById('cell-2'), document.getElementById('cell-4'), document.getElementById('cell-6')];
+
+  for (let cell of diagonalArray2){
+    letterArray2.push(cell.innerHTML);
+    idArray2.push(cell.id);
+  }
+  if (letterArray2.includes("") && (letterArray2.join("") === "XX" || letterArray2.join("") === "OO")){
+      return idArray2[letterArray2.indexOf("")];
+  } 
+
 };
 
 function fullBoard(){
@@ -91,7 +189,6 @@ function fullBoard(){
     if (cell.innerHTML === "X" || cell.innerHTML === "O"){
       count += 1;
     }
-    console.log(count)
     if(count === 9){
         return true;
       } else {
@@ -101,15 +198,12 @@ function fullBoard(){
 };
 
 function checkWinOrTie(player){
-  
   if(winCondition(player) === true){
-    console.log("win")
     document.getElementById('title').innerHTML= "Player " + player + " Wins!!!";
     continuePlay = false;
     return true;
   } 
   if (fullBoard()){
-    console.log("tie game");
     document.getElementById('title').innerHTML= "Tie Game!";
     continuePlay = false;
     return true;
@@ -118,7 +212,7 @@ function checkWinOrTie(player){
 }
 // needs to be refactored but works for every win condition!
 function winCondition(letter){
-  // row win condition:
+  // row win condition
   for (let number = 1; number < 4; number++){
     let rows = document.getElementsByClassName("r" + number);
     let rowArray = [];
@@ -141,7 +235,7 @@ function winCondition(letter){
       return true;
     }
   }
-  
+  // diagonal win conditions
   if (document.getElementById('cell-0').innerHTML === letter && document.getElementById('cell-4').innerHTML === letter && document.getElementById('cell-8').innerHTML === letter){
     return true;
   }
@@ -150,8 +244,6 @@ function winCondition(letter){
   } 
   return false;
 };
-
-
 
 </script>
 </body>
